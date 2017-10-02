@@ -1,26 +1,31 @@
-x <- c("raster", "tidyverse", "lubridate", "sf")
-lapply(x, library, character.only = TRUE, verbose = FALSE)
 
-# Import the US States and project to albers equal area
-states <- st_read(dsn = us_prefix,
-                  layer = "cb_2016_us_state_20m", quiet= TRUE) %>%
-  st_transform("+init=epsg:2163") %>%  # e.g. US National Atlas Equal Area
-  filter(!(NAME %in% c("Alaska", "Hawaii", "Puerto Rico"))) %>%
-  mutate(group = 1) %>%
-  st_simplify(., preserveTopology = TRUE)
+source("src/R/prepare_data.R")
+source("src/R/plot_theme.R")
 
-# Import the NEON domains and project to albers equal area
-neon_domains <- st_read(dsn = domain_prefix,
-                        layer = "NEON_Domains", quiet= TRUE) %>%
-  st_transform("+init=epsg:2163") %>%  # e.g. US National Atlas Equal Area
-  filter(!(DomainName %in% c("Taiga", "Tundra", "Pacific Tropical"))) %>%
-  st_intersection(., st_union(states))
+# Create data frames for map creation
+neon_domains <- as(neon_domains, "Spatial")
+nd_df <- fortify(neon_domains, region = 'id')
 
-# Import and process MTBS data and project to albers equal area
-mtbs_fire <- st_read(dsn = mtbs_prefix,
-                     layer = "mtbs_perims_1984-2015_DD_20170815", quiet= TRUE) %>%
-  tolower() %>%
-  st_transform("+init=epsg:2163") %>%
-  st_intersection(., st_union(states))
+# Create data frames for map creation
+mtbs <- as(mtbs, "Spatial")
+mtbs_df <- fortify(mtbs, region = 'id')
+
+# Create the map
+p <- ggplot() +
+  # map the neon domains
+  geom_polygon(data = nd_df, aes(x = long, y = lat, group = group), 
+               color = 'black', fill = "transparent", size = .25) +
+  geom_polygon(data = nd_df, aes(x = long, y = lat, group = group), 
+               color = 'black', fill = "transparent", size = .25) +
+
+  # map the forested sites that are in the study
+  geom_point(data = nks_df,  aes(x = long, y = lat), size = 2,
+             colour='#D62728', fill = NA, shape = 18) +
+  theme(legend.position = "none") +
+  theme_map()
+
+ggsave(file = "results/site_map.eps", p, width = 4, height = 3, 
+       dpi = 300, units = "cm") #saves p
+
 
 
