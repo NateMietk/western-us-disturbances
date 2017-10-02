@@ -65,6 +65,8 @@ reg_shp <- lapply(unlist(lapply(reg_raw, function(dir) list.files(path = dir, pa
 sfInit(parallel = TRUE, cpus = ncor)
 sfExport(list = c("ncor", "neon_domains", "reg_shp", "elevation"))
 mpb <- sfLapply(1:ncor, dagent_select, y = reg_shp, lvl = c("11006", "6B", "6J", "6K", "6L", "6P", "6S", "6W"))
+wsb <- sfLapply(1:ncor, dagent_select, y = reg_shp, lvl = c("BS", "12040"))
+sb <- sfLapply(1:ncor, dagent_select, y = reg_shp, lvl = c("3", "11009"))
 sfStop()
 
 mpb_combine <- do.call(rbind, mpb) 
