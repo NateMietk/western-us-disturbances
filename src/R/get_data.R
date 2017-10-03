@@ -3,7 +3,9 @@ x <- c("raster", "tidyverse", "sf", "assertthat", "purrr", "httr",
        "rvest", "lubridate", "rgdal", "tools", "snowfall")
 lapply(x, library, character.only = TRUE, verbose = FALSE)
 
-prefix <- file.path("data")
+prefix <- ifelse(Sys.getenv("LOGNAME") == "NateM", file.path("data"), 
+                 ifelse(Sys.getenv("LOGNAME") == "nami1114", file.path("data"), 
+                        file.path("../data")))
 raw_prefix <- file.path(prefix, "raw")
 elev_prefix <- file.path(raw_prefix, 'metdata_elevationdata')
 us_prefix <- file.path(raw_prefix, "cb_2016_us_state_20m")
@@ -11,19 +13,19 @@ domain_prefix <- file.path(raw_prefix, "NEONDomains_0")
 site_prefix <- file.path(raw_prefix, "neon_site")
 forest_prefix <- file.path(raw_prefix, "conus_forestgroup")
 mtbs_prefix <- file.path(raw_prefix, "mtbs_perimeter_data")
-ads <- file.path(raw_prefix, "ads")
-r1_dir <- file.path(ads, "r1")
-r2_dir <- file.path(ads, "r2")
-r3_dir <- file.path(ads, "r3")
-r4_dir <- file.path(ads, "r4")
-r5_dir <- file.path(ads, "r5")
-r6_dir <- file.path(ads, "r6")
-
+ads <- file.path(prefix, "ads")
+r1_dir <- file.path(prefix, "r1")
+r2_dir <- file.path(prefix, "r2")
+r3_dir <- file.path(prefix, "r3")
+r4_dir <- file.path(prefix, "r4")
+r5_dir <- file.path(prefix, "r5")
+r6_dir <- file.path(prefix, "r6")
+ads_out <- file.path(prefix, "wus")
 source("src/R/ads_https.R")
 
 # Check if directory exists for all variable aggregate outputs, if not then create
 var_dir <- list(prefix, raw_prefix, us_prefix, domain_prefix, site_prefix, forest_prefix, mtbs_prefix,
-                elev_prefix, ads, r1_dir, r2_dir, r3_dir, r4_dir, r5_dir, r6_dir)
+                ads_out, elev_prefix, ads, r1_dir, r2_dir, r3_dir, r4_dir, r5_dir, r6_dir)
 
 lapply(var_dir, function(x) if(!dir.exists(x)) dir.create(x, showWarnings = FALSE))
 
@@ -105,55 +107,55 @@ if (!file.exists(mtbs_shp)) {
 
 if(!dir.exists(file.path(r1_dir, "cleaned"))){
   for(i in seq_along(r1_https)){
-  dest <- paste0(ads, ".zip")
-  download.file(r1_https[[i]], dest)
-  unzip(dest, exdir = r1_dir)
-  unlink(dest)
+    dest <- paste0(ads, ".zip")
+    download.file(r1_https[[i]], dest)
+    unzip(dest, exdir = r1_dir)
+    unlink(dest)
   }
 }
 
 if(!dir.exists(file.path(r2_dir, "cleaned"))){
   for(i in seq_along(r2_https)){
-  dest <- paste0(ads, ".zip")
-  download.file(r2_https[[i]], dest)
-  unzip(dest, exdir = r2_dir)
-  unlink(dest)
+    dest <- paste0(ads, ".zip")
+    download.file(r2_https[[i]], dest)
+    unzip(dest, exdir = r2_dir)
+    unlink(dest)
   }
 }
 
 if(!dir.exists(file.path(r3_dir, "cleaned"))){
   for(i in seq_along(r3_https)){
-  dest <- paste0(ads, ".zip")
-  download.file(r3_https[[i]], dest)
-  unzip(dest, exdir = r3_dir)
-  unlink(dest)
+    dest <- paste0(ads, ".zip")
+    download.file(r3_https[[i]], dest)
+    unzip(dest, exdir = r3_dir)
+    unlink(dest)
   }
 }
 
 if(!dir.exists(file.path(r4_dir, "cleaned"))){
   for(i in seq_along(r4_https)){
-  dest <- paste0(ads, ".zip")
-  download.file(r4_https[[i]], dest)
-  unzip(dest, exdir = r4_dir)
-  unlink(dest)
+    dest <- paste0(ads, ".zip")
+    download.file(r4_https[[i]], dest)
+    unzip(dest, exdir = r4_dir)
+    unlink(dest)
   }
 }
 
 if(!dir.exists(file.path(r5_dir, "cleaned"))){
   for(i in seq_along(r5_https)){
-  dest <- paste0(ads, ".zip")
-  download.file(r5_https[[i]], dest)
-  unzip(dest, exdir = r5_dir)
-  unlink(dest)
+    dest <- paste0(ads, ".zip")
+    download.file(r5_https[[i]], dest)
+    unzip(dest, exdir = r5_dir)
+    unlink(dest)
   }
 }
 
 if(!dir.exists(file.path(r6_dir, "cleaned"))){
   for(i in seq_along(r6_https)){
-  dest <- paste0(ads, ".zip")
-  download.file(r6_https[[i]], dest)
-  unzip(dest, exdir = r6_dir)
-  unlink(dest)
+    dest <- paste0(ads, ".zip")
+    download.file(r6_https[[i]], dest)
+    unzip(dest, exdir = r6_dir)
+    unlink(dest)
   }
 }
 
