@@ -1,39 +1,63 @@
+region2_year <- function(x) {
 
-dagent_select <- function(y, x, lvl) {
-  require(snowfall)
-  require(raster)
-  require(sf)
-  require(tidyverse)
-  # y = input shapefile
-  # x = number of splits to iterate on in parallel
-  # lvl = the shapefile attribute to rasterize
-  # j = the larger underlying raster (4k)
-  # k = the smaller underlying raster (200m)
-  
-  p4string_ea <- "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"
-  
-  out_shp <- y %>%
-    st_cast("MULTIPOLYGON") %>%
-    setNames(tolower(names(.))) %>%
-    mutate(dca1 = ifelse(file_path_sans_ext(x) %in% "r6", agent1,
-                         ifelse(file_path_sans_ext(x) %in% "r3", dca, dca1))) %>%
-    filter(dca1 %in% lvl) %>%
-    st_simplify(., preserveTopology = TRUE, dTolerance = 1) %>%
-    st_transform(p4string_ea) %>%
-    st_buffer(., 0) %>%
-    st_intersection(., st_union(neon_domains)) %>%
-    group_by(dca1) %>%
-    summarise() %>%
-    mutate(group = 1)
+  ifelse(x == "r2_ads200_dmg", "2000",
+         ifelse(x == "r2_ads201_dmg", "2001",
+                ifelse(x == "r2_ads202_dmg", "2002",
+                       ifelse(x == "r2_ads203_dmg", "2003",
+                              ifelse(x == "r2_ads204_dmg", "2004",
+                                     ifelse(x == "r2_ads205_dmg", "2005",
+                                            ifelse(x == "r2_ads206_dmg", "2006",
+                                                   ifelse(x == "r2_ads207_dmg", "2007",
+                                                          ifelse(x == "r2_ads209_dmg", "2009",
+                                                                 ifelse(x == "r2_ads215_dmg", "2015",
+                                                                        ifelse(x == "r2_ads216_dmg", "2016",
+                                                                               ifelse(x == "r2_ads294_dmg", "1994",
+                                                                                      ifelse(x == "r2_ads295_dmg", "1995",
+                                                                                             ifelse(x == "r2_ads296_dmg", "1996",
+                                                                                                    ifelse(x == "r2_ads297_dmg", "1997",
+                                                                                                           ifelse(x == "r2_ads298_dmg", "1998",
+                                                                                                                  ifelse(x == "r2_ads299_dmg", "1999",
+                                                                                                                         ifelse(x == "0", "2010",
+                                                                                                                                x))))))))))))))))))
 }
 
-rst_create <- function(y, x, j, lvl) {
-  ncor <- parallel::detectCores()
-  require(snowfall)
-  require(raster)
-  require(sf)
-  require(tidyverse)
-  features <- 1:nrow(y[,])
-  parts <- split(features, cut(features, ncor))
-  outrst <- rasterize(as(y[parts[[x]],], "Spatial"), j, lvl)
-}
+region6_year <- function(x) {
+
+  ifelse(x == "r6id1980", "1980",
+         ifelse(x == "r6id1981", "1981",
+                ifelse(x == "r6id1982", "1982",
+                       ifelse(x == "r6id1983", "1983",
+                              ifelse(x == "r6id1984", "1984",
+                                     ifelse(x == "r6id1985", "1985",
+                                            ifelse(x == "r6id1986", "1986",
+                                                   ifelse(x == "r6id1987", "1987",
+                                                          ifelse(x == "r6id1988", "1988",
+                                                                 ifelse(x == "r6id1989", "1989",
+                                                                        ifelse(x == "r6id1990", "1990",
+                                                                               ifelse(x == "r6id1991", "1991",
+                                                                                      ifelse(x == "r6id1992", "1992",
+                                                                                             ifelse(x == "r6id1993", "1993",
+                                                                                                    ifelse(x == "r6id1994", "1994",
+                                                                                                           ifelse(x == "r6id1995", "1995",
+                                                                                                                  ifelse(x == "r6id1996", "1996",
+                                                                                                                         ifelse(x == "r6id1997", "1997",
+                                                                                                                                ifelse(x == "r6id1998", "1998",
+                                                                                                                                       ifelse(x == "r6id1999", "1999",
+                                                                                                                                              ifelse(x == "r6id2000", "2000",
+                                                                                                                                                     ifelse(x == "r6i2001", "2001",
+                                                                                                                                                            ifelse(x == "r6id2002", "2002",
+                                                                                                                                                                   ifelse(x == "r6id2003", "2003",
+                                                                                                                                                                          ifelse(x == "r6id2004", "2004",
+                                                                                                                                                                                 ifelse(x == "r6id2005", "2005",
+                                                                                                                                                                                        ifelse(x == "r6id2006", "2006",
+                                                                                                                                                                                               ifelse(x == "r6id2007", "2007",
+                                                                                                                                                                                                      ifelse(x == "r6id2008", "2008",
+                                                                                                                                                                                                             ifelse(x == "r6id2009", "2009",
+                                                                                                                                                                                                                    ifelse(x == "r6id2010", "2010",
+                                                                                                                                                                                                                           ifelse(x == "r6id2011", "2011",
+                                                                                                                                                                                                                                  ifelse(x == "r6id2012", "2012",
+                                                                                                                                                                                                                                         ifelse(x == "r6id2013", "2013",
+                                                                                                                                                                                                                                                ifelse(x == "r6id2014", "2014",
+                                                                                                                                                                                                                                                       ifelse(x == "r6id2015", "2015",
+                                                                                                                                                                                                                                                              "2106"))))))))))))))))))))))))))))))))))))
+  }
