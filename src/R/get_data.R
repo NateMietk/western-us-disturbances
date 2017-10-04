@@ -1,6 +1,6 @@
 
 x <- c("raster", "tidyverse", "sf", "assertthat", "purrr", "httr", 
-       "rvest", "lubridate", "rgdal", "tools", "snowfall")
+       "rvest", "lubridate", "rgdal", "tools")
 lapply(x, library, character.only = TRUE, verbose = FALSE)
 
 prefix <- ifelse(Sys.getenv("LOGNAME") == "NateM", file.path("data"), 
@@ -14,13 +14,13 @@ site_prefix <- file.path(raw_prefix, "neon_site")
 forest_prefix <- file.path(raw_prefix, "conus_forestgroup")
 mtbs_prefix <- file.path(raw_prefix, "mtbs_perimeter_data")
 ads <- file.path(prefix, "ads")
-r1_dir <- file.path(prefix, "r1")
-r2_dir <- file.path(prefix, "r2")
-r3_dir <- file.path(prefix, "r3")
-r4_dir <- file.path(prefix, "r4")
-r5_dir <- file.path(prefix, "r5")
-r6_dir <- file.path(prefix, "r6")
-ads_out <- file.path(prefix, "wus")
+r1_dir <- file.path(ads, "r1")
+r2_dir <- file.path(ads, "r2")
+r3_dir <- file.path(ads, "r3")
+r4_dir <- file.path(ads, "r4")
+r5_dir <- file.path(ads, "r5")
+r6_dir <- file.path(ads, "r6")
+ads_out <- file.path(ads, "wus")
 source("src/R/ads_https.R")
 
 # Check if directory exists for all variable aggregate outputs, if not then create

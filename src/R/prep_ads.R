@@ -1,5 +1,6 @@
 
 source("src/R/get_data.R")
+source("src/R/ads_clean_functions.R")
 
 p4string_ea <- "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"   #http://spatialreference.org/ref/sr-org/6903/
 
@@ -37,8 +38,8 @@ neon_domains <- st_read(dsn = domain_prefix,
 
 # These data natively are a COMPLETE mess. The packages in R could not adequately repair
 # all of the geometry errors and null values (i.e., rdgal, sf, rgeos).  After unpacking the *.e00
-# files I also had to runbatch repair geometry on all shapfiles for all years in all regions.
-# Almost all had errors that were reconciled.
+# files I also had to run batch repair geometry on all shapfiles for all years in all regions.
+# Almost all had errors that were reconciled. Those unpacked and repaired files reside in the cleaned folders.
 
 shp_1 <- lapply(unlist(lapply(file.path(r1_dir, "cleaned"),
                               function(dir) list.files(path = dir, pattern = "*.shp$", full.names = TRUE))),
@@ -246,15 +247,15 @@ wsb_combine_6 <- shp_combine_6 %>%
   filter(dca1 %in% c("BS"))
 
 if (!file.exists(file.path(ads_out, "mpb", "r6_mpb.gpkg"))) {
-  st_write(mpb_combine_5, file.path(ads_out, "mpb", "r6_mpb.gpkg"),
+  st_write(mpb_combine_6, file.path(ads_out, "mpb", "r6_mpb.gpkg"),
            driver = "GPKG",
            update=TRUE)}
 if (!file.exists(file.path(ads_out, "sb", "r6_sb.gpkg"))) {
-  st_write(sb_combine_5, file.path(ads_out, "sb", "r6_sb.gpkg"),
+  st_write(sb_combine_6, file.path(ads_out, "sb", "r6_sb.gpkg"),
            driver = "GPKG",
            update=TRUE)}
 if (!file.exists(file.path(ads_out, "wsb", "r6_wsb.gpkg"))) {
-  st_write(wsb_combine_5, file.path(ads_out, "wsb", "r6_wsb.gpkg"),
+  st_write(wsb_combine_6, file.path(ads_out, "wsb", "r6_wsb.gpkg"),
            driver = "GPKG",
            update=TRUE)}
 
