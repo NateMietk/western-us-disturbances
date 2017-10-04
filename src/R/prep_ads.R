@@ -259,6 +259,13 @@ if (!file.exists(file.path(ads_out, "wsb", "r6_wsb.gpkg"))) {
            driver = "GPKG",
            update=TRUE)}
 
+mpb_combine_1 <- st_read(dsn = "../data/ads/wus/mpb/r1_mpb.gpkg")
+mpb_combine_2 <- st_read(dsn = "../data/ads/wus/mpb/r2_mpb.gpkg")
+mpb_combine_3 <- st_read(dsn = "../data/ads/wus/mpb/r3_mpb.gpkg")
+mpb_combine_4 <- st_read(dsn = "../data/ads/wus/mpb/r4_mpb.gpkg")
+mpb_combine_5 <- st_read(dsn = "../data/ads/wus/mpb/r5_mpb.gpkg")
+mpb_combine_6 <- st_read(dsn = "../data/ads/wus/mpb/r6_mpb.gpkg")
+
 # mpb polygons
 mpb_wus_list <- list(mpb_combine_1, mpb_combine_2, mpb_combine_3,
                      mpb_combine_4, mpb_combine_5, mpb_combine_6)
@@ -268,6 +275,13 @@ if (!file.exists(file.path(ads_out, "mpb", "mpb_wus.gpkg"))) {
            driver = "GPKG",
            update=TRUE)}
 
+sb_combine_1 <- st_read(dsn = "../data/ads/wus/sb/r1_sb.gpkg")
+sb_combine_2 <- st_read(dsn = "../data/ads/wus/sb/r2_sb.gpkg")
+sb_combine_3 <- st_read(dsn = "../data/ads/wus/sb/r3_sb.gpkg")
+sb_combine_4 <- st_read(dsn = "../data/ads/wus/sb/r4_sb.gpkg")
+sb_combine_5 <- st_read(dsn = "../data/ads/wus/sb/r5_sb.gpkg")
+sb_combine_6 <- st_read(dsn = "../data/ads/wus/sb/r6_sb.gpkg")
+
 # sb polygons
 sb_wus_list <- list(sb_combine_1, sb_combine_2, sb_combine_3,
                     sb_combine_4, sb_combine_5, sb_combine_6)
@@ -276,6 +290,12 @@ if (!file.exists(file.path(ads_out, "sb", "sb_wus.gpkg"))) {
   st_write(sb_wus, file.path(ads_out, "sb", "sb_wus.gpkg"),
            driver = "GPKG",
            update=TRUE)}
+
+wsb_combine_1 <- st_read(dsn = "../data/ads/wus/wsb/r1_wsb.gpkg")
+wsb_combine_2 <- st_read(dsn = "../data/ads/wus/wsb/r2_wsb.gpkg")
+wsb_combine_3 <- st_read(dsn = "../data/ads/wus/wsb/r3_wsb.gpkg")
+wsb_combine_4 <- st_read(dsn = "../data/ads/wus/wsb/r4_wsb.gpkg")
+wsb_combine_6 <- st_read(dsn = "../data/ads/wus/wsb/r6_wsb.gpkg")
 
 # wsb polygons
 wsb_wus_list <- list(wsb_combine_1, wsb_combine_2, wsb_combine_3,
@@ -308,3 +328,22 @@ if (!file.exists(file.path(ads_out, "wsb", "wsb_wus.tif"))) {
   wsb_wus_rst <- rasterize(as(wsb_wus, "Spatial"), elevation, "group")
   writeRaster(wsb_wus_rst, filename = file.path(ads_out, "wsb", "wsb_wus.tif"),
               format = "GTiff", overwrite=TRUE)}
+
+# Create combine bb disturbance layer
+all_wus_list <- list(mpb_wus, sb_wus, wsb_wus)
+all_wus <- do.call(rbind, all_wus_list) %>%
+  st_buffer(., 0) %>%
+  group_by(dca1) %>%
+  summarise()
+if (!file.exists(file.path(ads_out, "combine", "all_wus.gpkg"))) {
+  st_write(all_wus, file.path(ads_out, "combine", "all_wus.gpkg"),
+           driver = "GPKG",
+           update=TRUE)}
+
+if (!file.exists(file.path(ads_out, "combine", "all_wus.tif"))) {
+  all_wus_rst <- rasterize(as(all_wus, "Spatial"), elevation, "dca1")
+  writeRaster(all_wus_rst, filename = file.path(ads_out, "combine", "all_wus.tif"),
+              format = "GTiff", overwrite=TRUE)}
+
+
+
