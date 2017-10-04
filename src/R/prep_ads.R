@@ -3,6 +3,14 @@ source("src/R/get_data.R")
 
 p4string_ea <- "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"   #http://spatialreference.org/ref/sr-org/6903/
 
+# Import the US States and project to albers equal area
+states <- st_read(dsn = us_prefix,
+                  layer = "cb_2016_us_state_20m", quiet= TRUE) %>%
+  st_transform(p4string_ea) %>%
+  filter(!(NAME %in% c("Alaska", "Hawaii", "Puerto Rico"))) %>%
+  mutate(group = 1) %>%
+  st_simplify(., preserveTopology = TRUE)
+
 # Import the NEON domains and project to albers equal area
 neon_domains <- st_read(dsn = domain_prefix,
                         layer = "NEON_Domains", quiet= TRUE) %>%
@@ -161,8 +169,8 @@ shp_4 <- lapply(unlist(lapply(file.path(r4_dir, "cleaned"),
                   select(dca1, group, year, geometry))
 shp_combine_4 <- do.call(rbind, shp_4) %>%
   mutate(year = ifelse(year == "r4_ads1998d0_polygon", "1998",
-         ifelse(year == "r4_ads1999d0_polygon", "1999",
-                ifelse(year == "0", "2010", year))))
+                       ifelse(year == "r4_ads1999d0_polygon", "1999",
+                              ifelse(year == "0", "2010", year))))
 
 mpb_combine_4 <- shp_combine_4 %>%
   filter(dca1 %in% c("11006"))
@@ -221,7 +229,7 @@ shp_6 <- lapply(unlist(lapply(file.path(r6_dir, "cleaned"),
                   st_cast("MULTIPOLYGON") %>%
                   setNames(tolower(names(.))) %>%
                   mutate(dca1 = agent1) %>%
-                  filter(dca1 %in% c("BS","3","6B", "6J", "6K", "6L", "6P", "6S", "6W")) %>%
+                  filter(dca1 %in% c("BS","3","6B", "6K", "6L", "6P", "6S", "6W")) %>%
                   st_transform(p4string_ea) %>%
                   st_intersection(., st_union(neon_domains)) %>%
                   mutate(group = 1,
@@ -231,7 +239,7 @@ shp_combine_6 <- do.call(rbind, shp_6) %>%
   mutate(year = region6_year(year))
 
 mpb_combine_6 <- shp_combine_6 %>%
-  filter(dca1 %in% c("6B", "6J", "6K", "6L", "6P", "6S", "6W"))
+  filter(dca1 %in% c("6B", "6K", "6L", "6P", "6S", "6W"))
 sb_combine_6 <- shp_combine_6 %>%
   filter(dca1 %in% c("3"))
 wsb_combine_6 <- shp_combine_6 %>%
@@ -288,7 +296,7 @@ elevation <- calc(elevation, fun = function(x){x[x < 0] <- NA; return(x)})
 if (!file.exists(file.path(ads_out, "mpb", "mpb_wus.tif"))) {
   mpb_wus_rst <- rasterize(as(mpb_wus, "Spatial"), elevation, "group")
   writeRaster(mpb_wus_rst, filename = file.path(ads_out, "mpb", "mpb_wus.tif"),
-                                          format = "GTiff")}
+              format = "GTiff")}
 
 if (!file.exists(file.path(ads_out, "sb", "sb_wus.tif"))) {
   sb_wus_rst <- rasterize(as(sb_wus, "Spatial"), elevation, "group")
