@@ -1,7 +1,7 @@
 theme_map <- function(...) {
-  theme_minimal() +
+  theme_minimal(base_size=10) +
     theme(
-      text = element_text(family = "Ubuntu Regular", color = "#22211d"),
+      text = element_text(family = "", color = "#22211d"),
       axis.line = element_blank(),
       axis.text.x = element_blank(),
       axis.text.y = element_blank(),
@@ -18,3 +18,4 @@ theme_map <- function(...) {
       ...
     )
 }
+
