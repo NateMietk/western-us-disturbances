@@ -24,7 +24,7 @@ neon_domains <- st_read(dsn = domain_prefix,
 # Import the NEON sites, clean to terrestial only, and project to albers equal area
 neon_sites <- st_read(dsn = site_prefix,
                       layer = "NEON_Field_Sites", quiet= TRUE) %>%
-  st_transform("+init=epsg:2163") %>%  # e.g. US National Atlas Equal Area
+  st_transform(p4string_ea) %>%  # e.g. US National Atlas Equal Area
   mutate(group = 1) %>%
   filter(PMC %in% c("D16CT1", "D13CT1", "D12CT1")) %>%
   as(., "Spatial")
@@ -86,21 +86,28 @@ mod_pdsi[mod_pdsi > -2] <- NA
 m <- c(-2, 99, 0,  -99,  -2, 1)
 rclmat <- matrix(m, ncol=3, byrow=TRUE)
 
-mpdsi_bool <- reclassify(mod_pdsi, rclmat)
-names(mpdsi_bool) <- paste("pdsi", year,
+pdsi_bool <- reclassify(mod_pdsi, rclmat)
+names(pdsi_bool) <- paste("pdsi", year,
                            sep = "_")
 
-mpdsi_tots <- stackApply(mpdsi_bool, rep(1, each = 33), fun = sum) %>%
+pdsi_tots <- stackApply(pdsi_bool, rep(1, each = 37), fun = sum) %>%
   mask(as(neon_domains, "Spatial"))
 
-y <- c(1, 5, 1, 
+y <- c(-99, 0, 0,
+       1, 5, 1, 
        5, 7, 2,
        7, 9, 3, 
        9, 12, 4, 
-       12, 18, 5)
+       12, 19, 5)
 rclyr <- matrix(y, ncol=3, byrow=TRUE)
-reclassify(mpdsi_tots, rclyr)
+pdsi_rcl <- reclassify(pdsi_tots, rclyr)
 
+# Prep for the plots
+
+pdsi_df <- as.data.frame(as(pdsi_rcl, "SpatialPixelsDataFrame")) %>%
+  mutate(pdsi_class = layer)
+
+nd_df <- fortify(as(neon_domains, "Spatial"), region = "id")
 
 
 

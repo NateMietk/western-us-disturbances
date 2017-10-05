@@ -18,7 +18,7 @@ theme_pub <- function(base_size=11, base_family="") {
             legend.position = "right",
             legend.text = element_text(size=11),
             legend.direction = "vertical",
-            legend.key = element_rect(colour = "transparent", fill = "white"),
+            legend.key = element_rect(colour = "transparent", fill = "transparent"),
             
             strip.background=element_rect(colour=NA),
             strip.text.x = element_text(size = 10),

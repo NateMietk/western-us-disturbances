@@ -21,6 +21,7 @@ daily_to_monthly <- function(file, mask){
   raster <- brick(file) 
   p4string <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
   projection(raster) <- CRS(p4string)
+  raster <- projectRaster(raster, res = 4000)
 
   
   start_date <- as.Date(paste(year, "01", "01", sep = "-"))

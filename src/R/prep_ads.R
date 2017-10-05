@@ -340,10 +340,7 @@ if (!file.exists(file.path(ads_out, "wsb", "wsb_wus.tif"))) {
 
 # Create combine bb disturbance layer
 all_wus_list <- list(mpb_wus, sb_wus, wsb_wus)
-all_wus <- do.call(rbind, all_wus_list) %>%
-  st_buffer(., 0) %>%
-  group_by(dca1) %>%
-  summarise()
+all_wus <- do.call(rbind, all_wus_list) 
 if (!file.exists(file.path(ads_out, "combine", "all_wus.gpkg"))) {
   st_write(all_wus, file.path(ads_out, "combine", "all_wus.gpkg"),
            driver = "GPKG",
