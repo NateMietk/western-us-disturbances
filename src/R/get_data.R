@@ -14,6 +14,11 @@ site_prefix <- file.path(raw_prefix, "neon_site")
 forest_prefix <- file.path(raw_prefix, "conus_forestgroup")
 mtbs_prefix <- file.path(raw_prefix, "mtbs_perimeter_data")
 climate_prefix <- file.path(raw_prefix, "climate")
+pdsi_pre <- file.path(climate_prefix, "pdsi")
+pdsi_mnth <- file.path(pdsi_pre, "monthly_mean_75thpct")
+pdsi_all_yrs <- file.path(pdsi_pre, "monthly_all_yrs")
+tem_prefix <- file.path(climate_prefix, "temp")
+tem_mnths <- file.path(tem_prefix, "monthly_max")
 ads <- file.path(prefix, "ads")
 r1_dir <- file.path(ads, "r1")
 r2_dir <- file.path(ads, "r2")
@@ -22,11 +27,11 @@ r4_dir <- file.path(ads, "r4")
 r5_dir <- file.path(ads, "r5")
 r6_dir <- file.path(ads, "r6")
 ads_out <- file.path(ads, "wus")
-source("src/R/ads_https.R")
 
 # Check if directory exists for all variable aggregate outputs, if not then create
 var_dir <- list(prefix, raw_prefix, us_prefix, domain_prefix, site_prefix, forest_prefix, mtbs_prefix,
-                climate_prefix, ads_out, elev_prefix, ads, r1_dir, r2_dir, r3_dir, r4_dir, r5_dir, r6_dir)
+                climate_prefix, pdsi_pre, pdsi_mnth, pdsi_all_yrs, tem_prefix,
+                ads_out, elev_prefix, ads, r1_dir, r2_dir, r3_dir, r4_dir, r5_dir, r6_dir)
 
 lapply(var_dir, function(x) if(!dir.exists(x)) dir.create(x, showWarnings = FALSE))
 
@@ -101,17 +106,24 @@ if (!file.exists(mtbs_shp)) {
   assert_that(file.exists(mtbs_shp))
 }
 
-pdsi_nc <- file.path(climate_prefix, 'pdsi_19792016.nc')
+pdsi_nc <- file.path(pdsi_all_yrs, 'pdsi_19792016.nc')
 if (!file.exists(pdsi_nc)) {
   loc <- "http://nimbus.cos.uidaho.edu/abatz/DATA/pdsi19792016.nc"
-  dest <- paste0(climate_prefix, "/pdsi_19792016.nc")
+  dest <- paste0(pdsi_all_yrs, "/pdsi_19792016.nc")
   download.file(loc, dest)
   assert_that(file.exists(pdsi_nc))
 }
 
+# Download the GridMet temperature data
+source("src/bash/get_temp_data.sh")
+
+
+
 # This section will download all of the ads data for regions 1-6 from 1978-2016 (regioanlly variable)
 # Becuase these files are a COMPLETE MESS(!) after download I was forced to go into ArcGIS and clean the files.
 # This allowed for efficient import. Not ideal, but for now it works.
+
+source("src/R/ads_https.R")
 
 if(!dir.exists(file.path(r1_dir, "cleaned"))){
   for(i in seq_along(r1_https)){
