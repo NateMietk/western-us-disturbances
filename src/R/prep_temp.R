@@ -1,4 +1,4 @@
-x <- c("raster", "tidyverse", "lubridate", "ncdf4", "sf", "zoo")
+x <- c("raster", "tidyverse", "lubridate", "ncdf4", "sf", "zoo", "snowfall")
 lapply(x, library, character.only = TRUE, verbose = FALSE)
 
 p4string_ea <- "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"   #http://spatialreference.org/ref/sr-org/6903/
@@ -30,8 +30,9 @@ neon_sites <- st_read(dsn = site_prefix,
   as(., "Spatial")
 
 # Monthly mean 
+source("src/functions/daily_to_monthly_tmmx.R")
 tmmx_mean <- stack()
-daily_files <- list.files(temp_mnths, pattern = ".nc", full.names = TRUE)
+daily_files <- list.files(file.path(temp_prefix, "daily"), pattern = ".nc", full.names = TRUE)
 
 sfInit(parallel = TRUE, cpus = parallel::detectCores())
 sfExportAll()
