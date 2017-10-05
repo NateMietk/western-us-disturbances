@@ -44,7 +44,7 @@ neon_domains <- st_read(dsn = domain_prefix,
 shp_1 <- lapply(unlist(lapply(file.path(r1_dir, "cleaned"),
                               function(dir) list.files(path = dir, pattern = "*.shp$", full.names = TRUE))),
                 function(x)
-                  st_read(dsn = x, layer = basename(file_path_sans_ext(x)))%>%
+                  st_read(dsn = x, layer = basename(file_path_sans_ext(x))) %>%
                   st_cast("MULTIPOLYGON") %>%
                   setNames(tolower(names(.))) %>%
                   filter(dca1 %in% c("11006","12040","11009")) %>%
@@ -53,10 +53,12 @@ shp_1 <- lapply(unlist(lapply(file.path(r1_dir, "cleaned"),
                   mutate(group = 1,
                          year = if (exists('rpt_yr', where=.)) rpt_yr
                          else basename(file_path_sans_ext(x))) %>%
+                  st_cast("MULTIPOLYGON") %>%
                   select(dca1, group, year, geometry))
 # This will combine all years for a given region into one shapefile
 shp_combine_1 <- do.call(rbind, shp_1) %>%
-  mutate(year = ifelse(year == "r1_ads2005_polygon", "2005", year))
+  mutate(year = as.factor(ifelse(year == "r1_ads2005_polygon", "2005", 
+                                 ifelse(year == "r1_ads2010_polygon", "2010",year)))) 
 
 mpb_combine_1 <- shp_combine_1 %>%
   filter(dca1 %in% c("11006"))
@@ -93,10 +95,11 @@ shp_2 <- lapply(unlist(lapply(file.path(r2_dir, "cleaned"),
                          year = if (exists('rpt_yr', where=.)) rpt_yr
                          else if(exists('survey_yr', where = .)) survey_yr
                          else basename(file_path_sans_ext(x))) %>%
+                  st_cast("MULTIPOLYGON") %>%
                   select(dca1, group, year, geometry))
-source("src/R/ads_clean_functions.R")
+
 shp_combine_2 <- do.call(rbind, shp_2) %>%
-  mutate(year = region2_year(year))
+  mutate(year = as.factor(region2_year(year)))
 
 mpb_combine_2 <- shp_combine_2 %>%
   filter(dca1 %in% c("11006"))
@@ -132,8 +135,9 @@ shp_3 <- lapply(unlist(lapply(file.path(r3_dir, "cleaned"),
                   mutate(group = 1,
                          year = if(exists('survey_yea', where = .)) survey_yea
                          else basename(file_path_sans_ext(x))) %>%
+                  st_cast("MULTIPOLYGON") %>%
                   select(dca1, group, year, geometry))
-shp_combine_3 <- do.call(rbind, shp_3)
+shp_combine_3 <- do.call(rbind, shp_3) 
 
 mpb_combine_3 <- shp_combine_3 %>%
   filter(dca1 %in% c("11006"))
@@ -167,11 +171,12 @@ shp_4 <- lapply(unlist(lapply(file.path(r4_dir, "cleaned"),
                   mutate(group = 1,
                          year = if (exists('rpt_yr', where=.)) rpt_yr
                          else basename(file_path_sans_ext(x))) %>%
+                  st_cast("MULTIPOLYGON") %>%
                   select(dca1, group, year, geometry))
 shp_combine_4 <- do.call(rbind, shp_4) %>%
-  mutate(year = ifelse(year == "r4_ads1998d0_polygon", "1998",
-                       ifelse(year == "r4_ads1999d0_polygon", "1999",
-                              ifelse(year == "0", "2010", year))))
+  mutate(year = as.factor(ifelse(year == "r4_ads1998d0_polygon", 1998,
+                                 ifelse(year == "r4_ads1999d0_polygon", 1999,
+                                        ifelse(year == "0", 2010, year)))))
 
 mpb_combine_4 <- shp_combine_4 %>%
   filter(dca1 %in% c("11006"))
@@ -205,6 +210,7 @@ shp_5 <- lapply(unlist(lapply(file.path(r5_dir, "cleaned"),
                   mutate(group = 1,
                          year = if (exists('rpt_yr', where=.)) rpt_yr
                          else basename(file_path_sans_ext(x))) %>%
+                  st_cast("MULTIPOLYGON") %>%
                   select(dca1, group, year, geometry))
 shp_combine_5 <- do.call(rbind, shp_5)
 
@@ -222,7 +228,6 @@ if (!file.exists(file.path(ads_out, "sb", "r5_sb.gpkg"))) {
            driver = "GPKG",
            update=TRUE)}
 
-
 shp_6 <- lapply(unlist(lapply(file.path(r6_dir, "cleaned"),
                               function(dir) list.files(path = dir, pattern = ".shp$", full.names = TRUE))),
                 function(x)
@@ -231,20 +236,24 @@ shp_6 <- lapply(unlist(lapply(file.path(r6_dir, "cleaned"),
                   setNames(tolower(names(.))) %>%
                   mutate(dca1 = agent1) %>%
                   filter(dca1 %in% c("BS","3","6B", "6K", "6L", "6P", "6S", "6W")) %>%
+                  mutate(dca1 = ifelse(dca1 %in% c("6B", "6K", "6L", "6P", "6S", "6W"), "11006", 
+                                       ifelse(dca1 %in% c("3"), "11009", "12040"))) %>%
                   st_transform(p4string_ea) %>%
                   st_intersection(., st_union(neon_domains)) %>%
                   mutate(group = 1,
                          year = basename(file_path_sans_ext(x))) %>%
+                  st_cast("MULTIPOLYGON") %>%
                   select(dca1, group, year, geometry))
 shp_combine_6 <- do.call(rbind, shp_6) %>%
-  mutate(year = region6_year(year))
+  mutate(year = as.factor(region6_year(year)),
+         dca1 = as.numeric(dca1))
 
 mpb_combine_6 <- shp_combine_6 %>%
-  filter(dca1 %in% c("6B", "6K", "6L", "6P", "6S", "6W"))
+  filter(dca1 %in% c("11006")) 
 sb_combine_6 <- shp_combine_6 %>%
-  filter(dca1 %in% c("3"))
+  filter(dca1 %in% c("11009")) 
 wsb_combine_6 <- shp_combine_6 %>%
-  filter(dca1 %in% c("BS"))
+  filter(dca1 %in% c("12040")) 
 
 if (!file.exists(file.path(ads_out, "mpb", "r6_mpb.gpkg"))) {
   st_write(mpb_combine_6, file.path(ads_out, "mpb", "r6_mpb.gpkg"),
@@ -259,12 +268,12 @@ if (!file.exists(file.path(ads_out, "wsb", "r6_wsb.gpkg"))) {
            driver = "GPKG",
            update=TRUE)}
 
-mpb_combine_1 <- st_read(dsn = "../data/ads/wus/mpb/r1_mpb.gpkg")
-mpb_combine_2 <- st_read(dsn = "../data/ads/wus/mpb/r2_mpb.gpkg")
-mpb_combine_3 <- st_read(dsn = "../data/ads/wus/mpb/r3_mpb.gpkg")
-mpb_combine_4 <- st_read(dsn = "../data/ads/wus/mpb/r4_mpb.gpkg")
-mpb_combine_5 <- st_read(dsn = "../data/ads/wus/mpb/r5_mpb.gpkg")
-mpb_combine_6 <- st_read(dsn = "../data/ads/wus/mpb/r6_mpb.gpkg")
+# mpb_combine_1 <- st_read(dsn = file.path(ads_out, "mpb", "r1_mpb.gpkg"))
+# mpb_combine_2 <- st_read(dsn = file.path(ads_out, "mpb", "r2_mpb.gpkg"))
+# mpb_combine_3 <- st_read(dsn = file.path(ads_out, "mpb", "r3_mpb.gpkg"))
+# mpb_combine_4 <- st_read(dsn = file.path(ads_out, "mpb", "r4_mpb.gpkg"))
+# mpb_combine_5 <- st_read(dsn = file.path(ads_out, "mpb", "r5_mpb.gpkg"))
+# mpb_combine_6 <- st_read(dsn = file.path(ads_out, "mpb", "r6_mpb.gpkg"))
 
 # mpb polygons
 mpb_wus_list <- list(mpb_combine_1, mpb_combine_2, mpb_combine_3,
@@ -275,12 +284,12 @@ if (!file.exists(file.path(ads_out, "mpb", "mpb_wus.gpkg"))) {
            driver = "GPKG",
            update=TRUE)}
 
-sb_combine_1 <- st_read(dsn = "../data/ads/wus/sb/r1_sb.gpkg")
-sb_combine_2 <- st_read(dsn = "../data/ads/wus/sb/r2_sb.gpkg")
-sb_combine_3 <- st_read(dsn = "../data/ads/wus/sb/r3_sb.gpkg")
-sb_combine_4 <- st_read(dsn = "../data/ads/wus/sb/r4_sb.gpkg")
-sb_combine_5 <- st_read(dsn = "../data/ads/wus/sb/r5_sb.gpkg")
-sb_combine_6 <- st_read(dsn = "../data/ads/wus/sb/r6_sb.gpkg")
+# sb_combine_1 <- st_read(dsn = file.path(ads_out, "sb", "r1_sb.gpkg"))
+# sb_combine_2 <- st_read(dsn = file.path(ads_out, "sb", "r2_sb.gpkg"))
+# sb_combine_3 <- st_read(dsn = file.path(ads_out, "sb", "r3_sb.gpkg"))
+# sb_combine_4 <- st_read(dsn = file.path(ads_out, "sb", "r4_sb.gpkg"))
+# sb_combine_5 <- st_read(dsn = file.path(ads_out, "sb", "r5_sb.gpkg"))
+# sb_combine_6 <- st_read(dsn = file.path(ads_out, "sb", "r6_sb.gpkg"))
 
 # sb polygons
 sb_wus_list <- list(sb_combine_1, sb_combine_2, sb_combine_3,
@@ -291,11 +300,11 @@ if (!file.exists(file.path(ads_out, "sb", "sb_wus.gpkg"))) {
            driver = "GPKG",
            update=TRUE)}
 
-wsb_combine_1 <- st_read(dsn = "../data/ads/wus/wsb/r1_wsb.gpkg")
-wsb_combine_2 <- st_read(dsn = "../data/ads/wus/wsb/r2_wsb.gpkg")
-wsb_combine_3 <- st_read(dsn = "../data/ads/wus/wsb/r3_wsb.gpkg")
-wsb_combine_4 <- st_read(dsn = "../data/ads/wus/wsb/r4_wsb.gpkg")
-wsb_combine_6 <- st_read(dsn = "../data/ads/wus/wsb/r6_wsb.gpkg")
+# wsb_combine_1 <- st_read(dsn = file.path(ads_out, "wsb", "r1_wsb.gpkg"))
+# wsb_combine_2 <- st_read(dsn = file.path(ads_out, "wsb", "r2_wsb.gpkg"))
+# wsb_combine_3 <- st_read(dsn = file.path(ads_out, "wsb", "r3_wsb.gpkg"))
+# wsb_combine_4 <- st_read(dsn = file.path(ads_out, "wsb", "r4_wsb.gpkg"))
+# wsb_combine_6 <- st_read(dsn = file.path(ads_out, "wsb", "r6_wsb.gpkg"))
 
 # wsb polygons
 wsb_wus_list <- list(wsb_combine_1, wsb_combine_2, wsb_combine_3,
