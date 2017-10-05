@@ -1,6 +1,7 @@
 daily_to_monthly <- function(file, mask){
   x <- c("lubridate", "rgdal", "ncdf4", "raster", "tidyverse", "snowfall")
   lapply(x, require, character.only = TRUE)
+  p4string_ea <- "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"   #http://spatialreference.org/ref/sr-org/6903/
   
   file_split <- file %>%
     basename %>%
@@ -21,7 +22,7 @@ daily_to_monthly <- function(file, mask){
   raster <- brick(file) 
   p4string <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
   projection(raster) <- CRS(p4string)
-  raster <- projectRaster(raster, res = 4000)
+  raster <- projectRaster(raster, crs = p4string_ea, res = 4000)
 
   
   start_date <- as.Date(paste(year, "01", "01", sep = "-"))
@@ -36,9 +37,8 @@ daily_to_monthly <- function(file, mask){
     monthly_mean <- stackApply(raster, month_seq, fun = mean)
     names(monthly_mean) <- paste(year(date_seq), month(date_seq), 
                                  day(date_seq), sep = "-")
-    monthly_mean <- mask(monthly_mean, mask)
-    writeRaster(monthly_mean, filename = file.path(dir_mean, paste0(var, "_", year, "_mean",".tif")),
+    tmmx_mean <- mask(monthly_mean, mask)
+    writeRaster(tmmx_mean, filename = file.path(dir_mean, paste0(var, "_", year, "_mean",".tif")),
                 format = "GTiff") 
-    rm(monthly_mean) 
   }
 }

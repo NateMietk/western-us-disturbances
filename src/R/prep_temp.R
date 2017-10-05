@@ -33,7 +33,7 @@ neon_sites <- st_read(dsn = site_prefix,
 tmmx_mean <- stack()
 daily_files <- list.files(temp_mnths, pattern = ".nc", full.names = TRUE)
 
-sfInit(parallel = TRUE, cpus = parallel::detectCores()-2)
+sfInit(parallel = TRUE, cpus = parallel::detectCores())
 sfExportAll()
 
 sfLapply(daily_files, 

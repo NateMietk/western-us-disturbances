@@ -30,7 +30,7 @@ ads_out <- file.path(ads, "wus")
 
 # Check if directory exists for all variable aggregate outputs, if not then create
 var_dir <- list(prefix, raw_prefix, us_prefix, domain_prefix, site_prefix, forest_prefix, mtbs_prefix,
-                climate_prefix, pdsi_pre, pdsi_mnth, pdsi_all_yrs, tem_prefix,
+                climate_prefix, pdsi_pre, pdsi_mnth, pdsi_all_yrs, temp_prefix, temp_mnths,
                 ads_out, elev_prefix, ads, r1_dir, r2_dir, r3_dir, r4_dir, r5_dir, r6_dir)
 
 lapply(var_dir, function(x) if(!dir.exists(x)) dir.create(x, showWarnings = FALSE))
