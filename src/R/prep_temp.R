@@ -7,13 +7,15 @@ source("src/functions/daily_to_monthly_tmmx.R")
 tmmx_mean <- stack()
 daily_files <- list.files(file.path(temp_prefix, "daily"), pattern = ".nc", full.names = TRUE)
 
+masks <- as(neon_domains, "Spatial")
 sfInit(parallel = TRUE, cpus = parallel::detectCores())
 sfExportAll()
 
 sfLapply(daily_files, 
          daily_to_monthly,
-         mask = neon_domains)
+         masks = masks)
 sfStop()
+
 
 # Yearly average 75th percentile tmmx
 year <- 1980:2016

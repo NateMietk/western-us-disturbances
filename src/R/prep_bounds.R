@@ -1,8 +1,6 @@
 x <- c("raster", "tidyverse", "lubridate", "ncdf4", "sf", "zoo", "snowfall")
 lapply(x, library, character.only = TRUE, verbose = FALSE)
 
-source("src/R/get_data.R")
-
 p4string_ea <- "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"   #http://spatialreference.org/ref/sr-org/6903/
 
 # Import the US States and project to albers equal area
