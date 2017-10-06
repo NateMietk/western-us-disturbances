@@ -29,3 +29,17 @@ neon_sites <- st_read(dsn = site_prefix,
   mutate(group = 'Key',
          id = row_number())
 
+# Import the forest groups and project to albers equal area
+forests <- raster(file.path(forest_prefix, "conus_forestgroup.img")) %>%
+  projectRaster(crs = p4string_ea, res = 500) %>%
+  crop(as(neon_domains, "Spatial")) %>%
+  mask(as(neon_domains, "Spatial"))
+
+forests[forests %in% c("100", "120", "140", "160", "180", "200", "240", "260", 
+           "300","320", "340", "360", "380", "400", "500", "600", "700", "800", 
+           "900", "910", "920", "940", "950", "980" , "990")] <- NA
+
+forests[forests >= 1] <- 1
+forests[forests < 1] <- 0
+
+

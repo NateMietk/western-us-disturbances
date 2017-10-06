@@ -1,0 +1,75 @@
+source("src/R/prep_pdsi.R")z
+source("src/functions/ggplot_theme.R")
+
+# Extract the site specific data 
+poly_extract <- filter(neon_domains, (DomainName %in% c("Northern Rockies", 
+                                                        "Southern Rockies / Colorado Plateau",
+                                                        "Pacific Northwest"))) %>%
+  as("Spatial")
+
+drops <- c("poly_extract.DomainName", "OBJECTID", "Shape_Leng", 
+           "DomainID", "Shape_Le_1", "id", "group", "Shape_Area")
+poly_extract[ , !(names(poly_extract) %in% drops)]
+pdsi_mean <- data.frame(poly_extract$DomainName, 
+                        raster::extract(pdsi_annomalies, poly_extract, layer = 1,
+                                        fun = mean))
+
+names(pdsi_mean) <- c("domains", paste(year(date_seq), month(date_seq), 
+                          day(date_seq), sep = "-"))
+
+# Prep data for plotting and calulate a 36-month moving average 
+pdsi_mean_cln <- pdsi_mean %>%
+  gather( year, value, -domains) %>%
+  group_by(domains) %>%
+  arrange(domains) %>%
+  mutate( med_5yr =rollapply(value, 60, mean, align='center', fill=NA)) %>%
+  ungroup() %>%
+  mutate(date = as.POSIXct(year, format = "%Y-%m-%d"),
+         month = month(date)) %>%
+  filter(month %in% c(6, 7, 8))
+
+pdsi_mean_cln %>%
+  filter(date >= "1984-01-01" & date <= "2016-12-01") %>%
+  ggplot(aes(x = date, y = value, color = domains, group = domains)) +
+  geom_point(alpha = 0.15) +
+  geom_line(size = 0.5, alpha = 0.15) +
+  geom_line(aes(y = med_5yr), size = 1.5, alpha = 0.75) +
+  geom_hline(yintercept = 0, alpha = 0.5) + 
+  scale_x_datetime(date_breaks = "4 year", date_labels = "%Y", expand = c(0, 0),
+                   limits = c(
+                     as.POSIXct("1984-01-01"),
+                     as.POSIXct("2016-12-01"))) + 
+  xlab("Year") + ylab("Summer anomalies of PDSI") +
+  theme_pub() + theme(legend.position = "none")
+
+
+# tmmx time series
+tmmx_mean <- data.frame(poly_extract$DomainName, 
+                        raster::extract(tmmx_anom, poly_extract, layer = 1,
+                                        fun = mean))
+
+names(tmmx_mean) <- c("domains", paste(year(date_seq), month(date_seq), 
+                                       day(date_seq), sep = "-"))
+
+# Prep data for plotting and calulate a 36-month moving average 
+tmmx_mean_cln <- tmmx_mean %>%
+  gather( year, value, -domains) %>%
+  group_by(domains) %>%
+  arrange(domains) %>%
+  mutate( med_5yr =rollapply(value, 36, mean, align='center', fill=NA)) %>%
+  ungroup() %>%
+  mutate(date = as.POSIXct(year, format = "%Y-%m-%d"))
+
+tmmx_mean_cln %>%
+  filter(date >= "1984-01-01" & date <= "2016-12-01") %>%
+  ggplot(aes(x = date, y = value, color = domains, group = domains)) +
+  geom_point(alpha = 0.15) +
+  geom_line(size = 0.5, alpha = 0.15) +
+  geom_line(aes(y = med_5yr), size = 1.5, alpha = 0.75) +
+  geom_hline(yintercept = 0, alpha = 0.5) + 
+  scale_x_datetime(date_breaks = "4 year", date_labels = "%Y", expand = c(0, 0),
+                   limits = c(
+                     as.POSIXct("1984-01-01"),
+                     as.POSIXct("2016-12-01"))) + 
+  xlab("Year") + ylab("75th percentile Palmer's Drought Severity Index") +
+  theme_pub() + theme(legend.position = "none")
