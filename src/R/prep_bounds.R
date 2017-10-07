@@ -42,4 +42,4 @@ forests[forests %in% c("100", "120", "140", "160", "180", "200", "240", "260",
 forests[forests >= 1] <- 1
 forests[forests < 1] <- 0
 
-
+pp <- rasterToPolygons(r, dissolve=TRUE)

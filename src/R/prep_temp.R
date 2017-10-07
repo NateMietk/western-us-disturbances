@@ -15,6 +15,13 @@ source("src/R/prep_bounds.R")
 #          daily_to_monthly,
 #          masks = masks)
 # sfStop()
+anom_fun <- function(x, y) {
+  x - y
+}
+mean_fun <- function(x, y) {
+  (x + y)/2
+}
+
 
 # Import and process the PDSI data
 start_date <- as.Date(paste("1980", "01", "01", sep = "-"))
@@ -24,22 +31,38 @@ month_seq <- month(date_seq)
 year_seq <- year(date_seq)
 
 # Create raster stack of monthly mean
-monthly_files <- list.files(file.path("~/Dropbox/Professional/RScripts/modeling-human-ignition/data/climate/tmmx",
-                                      "monthly_mean"), pattern = ".tif", full.names = TRUE)
-tmmx_mean <- stack(monthly_files) 
-tmmx_mean <- tmmx_mean - 273.15
-tmmx_mean <- dropLayer(tmmx_mean, 1:12)
+monthly_tmmx_files <- list.files(file.path("data/climate/tmmx","monthly_mean"), 
+                                 pattern = ".tif", full.names = TRUE)
+tmmx_mean <- stack(monthly_tmmx_files)
+
+monthly_tmmn_files <- list.files(file.path("data/climate/tmmn","monthly_mean"), 
+                                 pattern = ".tif", full.names = TRUE)
+neon_domainLL <- st_transform(neon_domains, crs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")  
+tmmn_mean <- stack(monthly_tmmn_files) %>%
+  crop(as(neon_domainLL, "Spatial")) %>%
+  mask(as(neon_domainLL, "Spatial")) %>%
+  projectRaster(crs = p4string_ea, res = 4000)
+  
+tmean <- overlay(x = tmmx_mean, y = tmmn_mean, fun = mean_fun)
 
 idx = seq(as.Date("1980/1/1"), as.Date("2016/12/31"), by = "month")
-tmmx_mean = setZ(tmmx_mean, idx)
-# names(monthly_mean) <- paste(year(date_seq), month(date_seq), 
-#                              day(date_seq), sep = "-")
+tmean = setZ(tmean, idx)
+
+# Monthly average tmean
+year <- 1979:2016
+for(i in year){
+  r_sub <- subset(tmean,  grep(i, names(tmean))) # subset based on year
+  # Write out the monthly anomalies by year
+  if(!file.exists(paste0("data/climate/tmean/monthly_mean/tmean_", i, "_mean.tif"))){
+    writeRaster(r_sub, filename = paste0("data/climate/tmean/monthly_mean/tmean_", i, "_mean.tif"),
+                format = "GTiff") }
+}
 
 # Create anomalies
 # Split 1984-2016 period and take climatology
-tclimatology = subset(tmmx_mean, 
-                      which(getZ(tmmx_mean)>=as.Date('1980-01-01') & 
-                              getZ(tmmx_mean)<=as.Date('2016-12-31')))
+tclimatology = subset(tmean, 
+                      which(getZ(tmean)>=as.Date('1980-01-01') & 
+                              getZ(tmean)<=as.Date('2016-12-31')))
 tclimatology_mon = zApply(tclimatology, by=months, mean, name=month.abb[])
 
 # Reorder the climatology from alphabetical
@@ -50,10 +73,8 @@ tclimatology_mon <-
         tclimatology_mon[[11]],tclimatology_mon[[10]], tclimatology_mon[[3]])
 
 # Produce monthly anomalies
-fun <- function(x, y) {
-  x - y
-}
-tmmx_annomalies <- overlay(x = tmmx_mean, y = tclimatology_mon, fun = fun)
+
+tmmx_annomalies <- overlay(x = tmean, y = tclimatology_mon, fun = anom_fun)
 tmmx_annomalies = setZ(tmmx_annomalies, idx)
 names(tmmx_annomalies) <- paste(year(date_seq), month(date_seq), 
                                 day(date_seq), sep = "-")
@@ -74,7 +95,7 @@ tmmx_summer_anom <- stack(tmmx_june_anom, tmmx_july_anom, tmmx_august_anom)
 # names(tmmx_std_anom) <- paste(year(date_seq), month(date_seq), 
 #                               day(date_seq), sep = "-")
 
-# Yearly average anomalous PDSI
+# Yearly average anomalous tmean
 year <- 1984:2016
 tmmx_yr_anom <- stack()
 for(i in year){

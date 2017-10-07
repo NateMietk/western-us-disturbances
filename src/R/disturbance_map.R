@@ -12,9 +12,15 @@ nks_df <-  nks_df %>%
          id = SiteID)
 
 mpb_shp <- st_read("data/raw/ads/mpb_wus.gpkg") 
-mpb_shp <- mpb_shp%>%
+mpb_shp <- mpb_shp %>%
+  st_make_valid() %>%
   group_by(group) %>%
   summarise()
+mpb_shp <- mpb_shp %>%
+  nc_dissolve %>% 
+  st_cast() %>% 
+  st_cast("MULTIPOLYGON")
+
 sb_shp <- st_read("data/raw/ads/sb_wus.gpkg")
 
 mpb_df <- fortify(as(mpb_shp, "Spatial"), region = "group")
@@ -73,7 +79,16 @@ geom_polygon(data=nd_df, aes(x = long, y = lat, group = group),
   theme(legend.position = "none") +
   theme_map()
 
-g <- arrangeGrob(pdsi_p, ads_p, mtbs_p, nrow = 1)
+# Panel D: Combination
+combo_p <- ggplot() +
+  geom_polygon(data = nd_df, aes(x = long, y = lat, group = group),
+               color='black', fill = "transparent", size = 0.25) +
+  geom_point(data = nks_df,  aes(x = long, y = lat, group = id), size = 2,
+             colour='#000000', shape = 18) +
+  theme(legend.position = "none") +
+  theme_map()
+
+g <- arrangeGrob(pdsi_p, ads_p, mtbs_p, combo_p, nrow = 1)
 
 ggsave(file = "results/disturbaces.png", g, width = 5, height = 2.5,
        scale = 3, dpi = 600, units = "cm") #saves p

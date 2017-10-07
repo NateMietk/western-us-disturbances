@@ -2,12 +2,18 @@ source("src/R/prep_pdsi.R")
 source("src/functions/ggplot_theme.R")
 
 # Extract the site specific data 
-date_seq2 <- 1980:2016
 pdsi_mean <- data.frame(coordinates(as(neon_sites, "Spatial")),
                         neon_sites$SiteName, 
                         raster::extract(pdsi_sum_yr_anom, as(neon_sites, "Spatial"), 
                                         layer = 1, buffer = 50000, fun = mean))
 names(pdsi_mean) <- c("x", "y", "site",  paste(year(date_seq), month(date_seq),
+                                               day(date_seq), sep = "-"))
+
+tmean_mean <- data.frame(coordinates(as(neon_sites, "Spatial")),
+                        neon_sites$SiteName, 
+                        raster::extract(tmean_annomalies, as(neon_sites, "Spatial"), 
+                                        layer = 1, buffer = 50000, fun = mean))
+names(tmean_mean) <- c("x", "y", "site",  paste(year(date_seq), month(date_seq), 
                                                day(date_seq), sep = "-"))
 
 # Prep data for plotting and calulate a 3-year moving average 
@@ -22,7 +28,19 @@ pdsi_mean_cln <- pdsi_mean %>%
          month = month(date)) %>%
   filter(month %in% c(6, 7, 8))
 
-pdsi_mean_cln %>%
+tmean_mean <- tmean_mean %>%
+  select(-x, -y) %>%
+  gather( year, value, -site) %>%
+  group_by(site) %>%
+  arrange(site) %>%
+  mutate( med_5yr =rollapply(value, 60, mean, align='center', fill=NA)) %>%
+  ungroup() %>%
+  mutate(date = as.POSIXct(year, format = "%Y-%m-%d"),
+         month = month(date)) %>%
+  filter(month %in% c(6, 7, 8))
+
+# Plot the time series for summer months of tmean and pdsi
+pdsi_ts <- pdsi_mean_cln %>%
   filter(date >= "1984-01-01" & date <= "2016-12-01") %>%
   ggplot(aes(x = date, y = value, color = site, group = site)) +
   geom_point(alpha = 0.15) +
@@ -37,26 +55,7 @@ pdsi_mean_cln %>%
   xlab("Year") + ylab("Summer anomalies of PDSI") +
   theme_pub() + theme(legend.position = "none")
 
-# Extract the site specific data 
-tmmx_mean <- data.frame(coordinates(as(neon_sites, "Spatial")),
-                        neon_sites$SiteName, 
-                        raster::extract(tmmx_annomalies, as(neon_sites, "Spatial"), layer = 1))
-names(tmmx_mean) <- c("x", "y", "site",  paste(year(date_seq), month(date_seq), 
-                                               day(date_seq), sep = "-"))
-
-# Prep data for plotting and calulate a 3-year moving average 
-tmmx_mean <- tmmx_mean %>%
-  select(-x, -y) %>%
-  gather( year, value, -site) %>%
-  group_by(site) %>%
-  arrange(site) %>%
-  mutate( med_5yr =rollapply(value, 60, mean, align='center', fill=NA)) %>%
-  ungroup() %>%
-  mutate(date = as.POSIXct(year, format = "%Y-%m-%d"),
-         month = month(date)) %>%
-  filter(month %in% c(6, 7, 8))
-
-tmmx_mean %>%
+tmean_ts <- tmean_mean %>%
   filter(date >= "1984-01-01" & date <= "2016-12-01") %>%
   ggplot(aes(x = date, y = value, color = site, group = site)) +
   geom_point(alpha = 0.15) +
@@ -71,4 +70,7 @@ tmmx_mean %>%
   xlab("Year") + ylab("") +
   theme_pub() + theme(legend.position = "none")
 
+g <- arrangeGrob(pdsi_ts, tmean_ts, nrow = 2)
 
+ggsave(file = "results/timeseries_pts.png", g, width = 5, height = 4,
+       scale = 3, dpi = 600, units = "cm") #saves p
