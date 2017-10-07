@@ -31,19 +31,19 @@ month_seq <- month(date_seq)
 year_seq <- year(date_seq)
 
 # Create raster stack of monthly mean
-monthly_tmmx_files <- list.files(file.path("data/climate/tmmx","monthly_mean"), 
+monthly_tmmx_files <- list.files(file.path(prefix, "climate/tmmx","monthly_mean"), 
                                  pattern = ".tif", full.names = TRUE)
 tmmx_mean <- stack(monthly_tmmx_files)
 
-monthly_tmmn_files <- list.files(file.path("data/climate/tmmn","monthly_mean"), 
+monthly_tmmn_files <- list.files(file.path(prefix, "climate/tmmn","monthly_mean"), 
                                  pattern = ".tif", full.names = TRUE)
-neon_domainLL <- st_transform(neon_domains, crs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")  
+
 tmmn_mean <- stack(monthly_tmmn_files) %>%
-  crop(as(neon_domainLL, "Spatial")) %>%
-  mask(as(neon_domainLL, "Spatial")) %>%
-  projectRaster(crs = p4string_ea, res = 4000)
+  projectRaster(crs = p4string_ea, res = 4000) %>%
+  crop(as(neon_domain, "Spatial")) %>%
+  mask(as(neon_domain, "Spatial")) 
   
-tmean <- overlay(x = tmmx_mean, y = tmmn_mean, fun = mean_fun)
+tmean <- overlay(x = tmmx_mean, y = tmmn_mean, fun = mean)
 
 idx = seq(as.Date("1980/1/1"), as.Date("2016/12/31"), by = "month")
 tmean = setZ(tmean, idx)

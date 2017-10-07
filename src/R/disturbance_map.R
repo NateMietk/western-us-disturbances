@@ -11,20 +11,14 @@ nks_df <-  nks_df %>%
          lat = coords.x2,
          id = SiteID)
 
-mpb_shp <- st_read("data/raw/ads/mpb_wus.gpkg") 
-mpb_shp <- mpb_shp %>%
-  st_make_valid() %>%
-  group_by(group) %>%
-  summarise()
-mpb_shp <- mpb_shp %>%
-  nc_dissolve %>% 
-  st_cast() %>% 
-  st_cast("MULTIPOLYGON")
+mpb <- raster("../data/ads/wus/mpb/mpb_wus_dis.shp")
+mpb_df <- fortify(as(mpb, "Spatial"), region = "group")
 
-sb_shp <- st_read("data/raw/ads/sb_wus.gpkg")
+sb <- raster("../data/ads/wus/sb/sb_wus_dis.shp")
+sb_df <- fortify(as(sb, "Spatial"), region = "group")
 
-mpb_df <- fortify(as(mpb_shp, "Spatial"), region = "group")
-sb_df <- fortify(as(sb_shp, "Spatial"), region = "group")
+wsb <- raster("../data/ads/wus/wsb/wsb_wus_dis.shp")
+wsb_df <- fortify(as(wsb, "Spatial"), region = "group")
 
 # Panel A: Drought
 pdsi_p <- ggplot() +
@@ -40,7 +34,7 @@ pdsi_p <- ggplot() +
              colour='#000000', shape = 18) +
   theme(legend.position = "none") +
   theme_map()
-  
+
 # Panel B: Bark Beetle
 ads_p <- ggplot() +
   # map the raster
@@ -58,6 +52,8 @@ ads_p <- ggplot() +
   #             show.legend = FALSE) +
   scale_fill_manual(
     values = c("transparent", "olivedrab1"))  +
+  geom_polygon(data = wsb_df, aes(x = long, y = lat, group = group),
+               color='darkgreen', fill = "blue", size = 0.01) +
   geom_polygon(data = mpb_df, aes(x = long, y = lat, group = group),
                color='darkgreen', fill = "darkgreen", size = 0.01) +
   geom_polygon(data = sb_df, aes(x = long, y = lat, group = group),
@@ -74,21 +70,12 @@ mtbs_p <- ggplot() +
   geom_raster(data = mtbs_df, aes(x = x, y = y, fill = factor(fire_only)),
               show.legend = FALSE) +
   scale_fill_manual(values = "#D62728") +
-geom_polygon(data=nd_df, aes(x = long, y = lat, group = group),
+  geom_polygon(data=nd_df, aes(x = long, y = lat, group = group),
                color='black', fill = "transparent", size = 0.25) +
   theme(legend.position = "none") +
   theme_map()
 
-# Panel D: Combination
-combo_p <- ggplot() +
-  geom_polygon(data = nd_df, aes(x = long, y = lat, group = group),
-               color='black', fill = "transparent", size = 0.25) +
-  geom_point(data = nks_df,  aes(x = long, y = lat, group = id), size = 2,
-             colour='#000000', shape = 18) +
-  theme(legend.position = "none") +
-  theme_map()
-
-g <- arrangeGrob(pdsi_p, ads_p, mtbs_p, combo_p, nrow = 1)
+g <- arrangeGrob(pdsi_p, ads_p, mtbs_p, nrow = 1)
 
 ggsave(file = "results/disturbaces.png", g, width = 5, height = 2.5,
        scale = 3, dpi = 600, units = "cm") #saves p

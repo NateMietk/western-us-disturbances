@@ -37,16 +37,20 @@ shp_1 <- lapply(unlist(lapply(file.path(r1_dir, "cleaned"),
 # This will combine all years for a given region into one shapefile
 shp_combine_1 <- do.call(rbind, shp_1) %>%
   mutate(year = as.factor(ifelse(year == "r1_ads2005_polygon", "2005", 
-                                 ifelse(year == "r1_ads2010_polygon", "2010",year)))) 
+                                 ifelse(year == "r1_ads2010_polygon", "2010",year)))) %>%
+  st_make_valid()
 
 mpb_combine_1 <- shp_combine_1 %>%
-  filter(dca1 %in% c("11006"))
+  filter(dca1 %in% c("11006")) %>%
+  st_make_valid()
 
 sb_combine_1 <- shp_combine_1 %>%
-  filter(dca1 %in% c("11009"))
+  filter(dca1 %in% c("11009")) %>%
+  st_make_valid()
 
 wsb_combine_1 <- shp_combine_1 %>%
-  filter(dca1 %in% c("12040"))
+  filter(dca1 %in% c("12040")) %>%
+  st_make_valid()
 
 if (!file.exists(file.path(ads_out, "mpb", "r1_mpb.gpkg"))) {
   st_write(mpb_combine_1, file.path(ads_out, "mpb", "r1_mpb.gpkg"),
