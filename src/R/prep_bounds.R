@@ -29,17 +29,36 @@ neon_sites <- st_read(dsn = site_prefix,
   mutate(group = 'Key',
          id = row_number())
 
+# Import and process MTBS data and project to albers equal area
+mtbs_fire <- st_read(dsn = mtbs_prefix,
+                     layer = "mtbs_perims_1984-2015_DD_20170815", quiet= TRUE) %>%
+  st_transform(p4string_ea) %>%
+  st_buffer(., 0) %>%
+  st_intersection(., st_union(neon_domains)) %>%
+  mutate(id = row_number(),
+         group = 1) 
+
+# Import the elevation image
+elevation <- raster(file.path(raw_prefix, "metdata_elevationdata", "metdata_elevationdata.nc")) %>%
+  projectRaster(crs = p4string_ea, res = 500) %>%
+  crop(as(neon_domains, "Spatial")) %>%
+  mask(as(neon_domains, "Spatial"))
+elevation <- calc(elevation, fun = function(x){x[x < 0] <- NA; return(x)})
+
 # Import the forest groups and project to albers equal area
 forests <- raster(file.path(forest_prefix, "conus_forestgroup.img")) %>%
   projectRaster(crs = p4string_ea, res = 500) %>%
   crop(as(neon_domains, "Spatial")) %>%
   mask(as(neon_domains, "Spatial"))
+  
+# forest_poly <- rasterToPolygons(forests, dissolve=TRUE)
+# 
+# 
+# forests[forests %in% c("100", "120", "140", "160", "180", "200", "240", "260", 
+#            "300","320", "340", "360", "380", "400", "500", "600", "700", "800", 
+#            "900", "910", "920", "940", "950", "980" , "990")] <- NA
+# 
+# forests[forests >= 1] <- 1
+# forests[forests < 1] <- 0
+# 
 
-forests[forests %in% c("100", "120", "140", "160", "180", "200", "240", "260", 
-           "300","320", "340", "360", "380", "400", "500", "600", "700", "800", 
-           "900", "910", "920", "940", "950", "980" , "990")] <- NA
-
-forests[forests >= 1] <- 1
-forests[forests < 1] <- 0
-
-pp <- rasterToPolygons(r, dissolve=TRUE)
