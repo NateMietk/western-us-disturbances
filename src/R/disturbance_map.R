@@ -17,14 +17,6 @@ pdsi_p <- ggplot() +
 
 # Panel B: Bark Beetle
 ads_p <- ggplot() +
-  # geom_raster(data = mpb_df,
-  #             aes(x = x, y = y, fill = factor(mpb)),
-  #             show.legend = FALSE) +
-  # geom_raster(data = sb_df,
-  #             aes(x = x, y = y, fill = factor(sb)),
-  #             show.legend = FALSE) +
-  # scale_fill_manual(
-  #   values = c("darkgreen", "red"))  +
   geom_polygon(data = mpb_df, aes(x = long, y = lat, group = group),
                color='darkgreen', fill = "darkgreen", size = 0) +
   geom_polygon(data = sb_df, aes(x = long, y = lat, group = group),
@@ -61,7 +53,7 @@ combo_p <- ggplot(iskm.df, aes(long, lat)) +
   theme(legend.position = "none") +
   theme_map()
 
-g <- arrangeGrob(pdsi_p, ads_p, mtbs_p, combo_p, nrow = 1)
+g <- arrangeGrob(pdsi_p, ads_p, mtbs_p, nrow = 1)
 
 ggsave(file = "results/disturbaces.eps", g, width = 6, height = 2,
        scale = 3, dpi = 600, units = "cm") #saves p
