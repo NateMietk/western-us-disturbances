@@ -74,6 +74,8 @@ Rscript disturbance_map.R
 
 Here we take all the cleaned and processed data and create a 4 panel figure.  Where panel: a) Severe drought (<-2 PDSI), b) total mountain pine beetle and spruce beetle outbreak extent from 1984-2016, c) total burned area by wildfire from 1984-2016, and d) depicts where each of these disturbances overlap in space.  Note, panel "d" uses on pixels that observed more than 10 years of severe drought.
 
+![alt text](https://github.com/NateMietk/western-us-disturbances/blob/master/results/disturbaces.tif)
+
 ## Time series creation.
 
 ``` bash
