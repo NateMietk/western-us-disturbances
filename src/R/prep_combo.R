@@ -49,7 +49,7 @@ levels(int_st_kv_map) = kv_levs
 
 iskm = deratify(int_st_kv_map, 'interactions')
 
-my_colors = c("white", "burlywood", "gold", "red", "black")
+my_colors = c("white", "darkorange2", "darkcyan", "black", "red")
 my_labels = c('None', 'Drought & Bark Beetle', 
               'Drought & Fire', 'Bark Beetle & Fire', 
               'Drought, Bark Beetle & Fire')
@@ -58,5 +58,16 @@ iskm.p = rasterToPoints(iskm)
 iskm.df =data.frame(iskm.p)
 colnames(iskm.df) = c("long", "lat", "interactions")
 iskm.df$interactions = as.factor(iskm.df$interactions)
+
+ggplot(iskm.df, aes(long, lat)) +
+  geom_raster(aes(fill = interactions)) +
+  scale_fill_manual(values = my_colors, labels = my_labels, name = "Interactions") +
+  theme_minimal() +
+  geom_path(data = states.df, aes(long, lat, group=group), color = "grey40") +
+  geom_path(data = ext_poly, color = "black") +
+  geom_text(data = centroids.df, aes(label = states, x = long, y = lat, group=states), fontface = "bold") +
+  xlab("Longitude") +
+  ylab("Latitude")
+
 
 ncells(iskm == 1)

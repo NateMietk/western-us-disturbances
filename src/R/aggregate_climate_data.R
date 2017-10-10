@@ -1,20 +1,34 @@
 
 library(raster)
 library(lubridate)
+library(sf)
 library(rgdal)
 library(tidyverse)
 library(assertthat)
 library(snowfall)
 library(ncdf4)
 # Creat directories for state data
-raw_prefix <- ifelse(Sys.getenv("LOGNAME") == "NateM", file.path("data", "raw"),
+prefix <- ifelse(Sys.getenv("LOGNAME") == "NateM", file.path("data", "raw"),
                      ifelse(Sys.getenv("LOGNAME") == "nami1114", file.path("data", "raw"),
                             file.path("../data", "raw")))
 domain_prefix <- file.path(raw_prefix, "NEONDomains_0")
+us_prefix <- file.path(raw_prefix, "cb_2016_us_state_20m")
 
 # Check if directory exists for all variable aggregate outputs, if not then create
-var_dir <- list(raw_prefix, domain_prefix)
+var_dir <- list(raw_prefix, domain_prefix, us_prefix)
 lapply(var_dir, function(x) if(!dir.exists(x)) dir.create(x, showWarnings = FALSE))
+
+#Download the USA States layer
+
+us_shp <- file.path(us_prefix, "cb_2016_us_state_20m.shp")
+if (!file.exists(us_shp)) {
+  loc <- "https://www2.census.gov/geo/tiger/GENZ2016/shp/cb_2016_us_state_20m.zip"
+  dest <- paste0(us_prefix, ".zip")
+  download.file(loc, dest)
+  unzip(dest, exdir = us_prefix)
+  unlink(dest)
+  assert_that(file.exists(us_shp))
+}
 
 domain_shp <- file.path(domain_prefix, "NEON_Domains.shp")
 if (!file.exists(domain_shp)) {
@@ -26,17 +40,30 @@ if (!file.exists(domain_shp)) {
   assert_that(file.exists(domain_shp))
 }
 
+p4string_ea <- "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"   #http://spatialreference.org/ref/sr-org/6903/
+
+# Import the US States and project to albers equal area
+states <- st_read(dsn = us_prefix,
+                  layer = "cb_2016_us_state_20m", quiet= TRUE) %>%
+  st_transform( "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") %>%
+  filter(!(NAME %in% c("Alaska", "Hawaii", "Puerto Rico"))) %>%
+  mutate(group = 1) %>%
+  st_simplify(., preserveTopology = TRUE)
+
+
 neon_domains <- st_read(dsn = domain_prefix,
                         layer = "NEON_Domains", quiet= TRUE) %>%
-  st_transform(crs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") %>%
+  st_transform( "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs") %>%
   filter(DomainName %in% c("Desert Southwest", "Pacific Northwest", "Great Basin",
                            "Southern Rockies / Colorado Plateau", "Northern Rockies", "Pacific Southwest")) %>%
   st_intersection(., st_union(states)) %>%
   mutate(id = row_number(),
          group = 1)
 
-daily_to_monthly <- function(file, mask){
-  x <- c("lubridate", "rgdal", "ncdf4", "raster", "tidyverse", "snowfall")
+neon_domains_ea <- st_transform(neon_domains, crs = p4string_ea)
+
+daily_to_monthly <- function(file, mask, cropped){
+  x <- c("lubridate", "sf", "rgdal", "ncdf4", "raster", "tidyverse", "snowfall")
   lapply(x, require, character.only = TRUE)
 
   file_split <- file %>%
@@ -73,7 +100,9 @@ daily_to_monthly <- function(file, mask){
     monthly_mean <- stackApply(raster, month_seq, fun = mean)
     monthly_mean <- flip(t(monthly_mean), direction = "x")
     monthly_mean <- mask(monthly_mean, mask)
-    monthly_mean <- projectRaster(p4string_ea, res = 4000)
+    monthly_mean <- projectRaster(monthly_mean, crs = p4string_ea, res = 4000) %>%
+      crop(cropped) %>%
+      mask(cropped)
 
     names(monthly_mean) <- paste(var, year,
                                  unique(month(date_seq, label = TRUE)),
@@ -90,5 +119,6 @@ sfExportAll()
 
 sfLapply(daily_files,
          daily_to_monthly,
-         mask = neon_domains)
+         mask = as(neon_domains, "Spatial"),
+         cropped = as(neon_domains_ea, "Spatial"))
 sfStop()
