@@ -5,7 +5,6 @@
 Nathan Mietkiewicz
 
 ## Requirements
-------------
 
 Downloading and processing the data requires that you have [R](https://www.r-project.org/) installed, and the following R packages:
 
@@ -16,7 +15,6 @@ lapply(x, library, character.only = TRUE, verbose = FALSE)
 ```
 
 ## Running the script
-------------------
 
 To run the R script, you can use `Rscript` from the terminal:
 
@@ -37,7 +35,6 @@ This will pull all data needed for this project from the internet.  The data tha
 8.  Download all daily maximum and minimum temperature data from 1979-2016 for the whole  US from the GridMet server.
 
 ## The unfortunate part...
------------------------
 
 The ADS are frankly a mess. The packages in R could not adequately repair all of the geometry errors and null values (i.e., rdgal, sf, rgeos).  After unpacking the archaic`.e00` files, batch repair geometry on all shapfiles for all years in all regions needed to be done in either ArcGIS or QGIS. Almost all years/regions had errors that were reconciled. Those unpacked and repaired files should be then moved and reside in the "cleaned" folders within each region.
 
@@ -74,7 +71,7 @@ Rscript disturbance_map.R
 
 Here we take all the cleaned and processed data and create a 4 panel figure.  Where panel: a) Severe drought (<-2 PDSI), b) total mountain pine beetle and spruce beetle outbreak extent from 1984-2016, c) total burned area by wildfire from 1984-2016, and d) depicts where each of these disturbances overlap in space.  Note, panel "d" uses on pixels that observed more than 10 years of severe drought.
 
-![alt text](https://github.com/NateMietk/western-us-disturbances/blob/master/results/disturbaces.tif)
+![disturbaces](results/disturbaces.tif)
 
 ## Time series creation.
 
