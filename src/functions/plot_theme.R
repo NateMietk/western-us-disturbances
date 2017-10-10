@@ -12,6 +12,7 @@ theme_map <- function(...) {
       panel.grid.major = element_line(color = "transparent", size = 0.2),
       panel.grid.minor = element_blank(),
       plot.background = element_blank(), 
+      panel.grid = element_blank(),
       panel.background = element_blank(), 
       legend.background = element_blank(), 
       panel.border = element_blank(),
